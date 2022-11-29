@@ -1,5 +1,5 @@
 bluetooth.onBluetoothConnected(function () {
-    paired = 1
+	
 })
 function SGP30_Init () {
     // address: 0x58
@@ -8,15 +8,6 @@ function SGP30_Init () {
     88,
     8195,
     NumberFormat.UInt16BE,
-    false
-    )
-    basic.pause(100)
-}
-function I2C_Reset () {
-    pins.i2cWriteNumber(
-    0,
-    6,
-    NumberFormat.UInt8BE,
     false
     )
     basic.pause(100)
@@ -36,6 +27,16 @@ function SGP30_Read () {
     TVOC = pins.i2cReadNumber(88, NumberFormat.UInt16BE, false)
     crc = pins.i2cReadNumber(88, NumberFormat.UInt8BE, false)
 }
+function SGP30_Reset () {
+    pins.i2cWriteNumber(
+    0,
+    6,
+    NumberFormat.UInt8BE,
+    false
+    )
+    basic.pause(100)
+}
+let t = 0
 let v_cap = 0
 let v_solar = 0
 let humi = 0
@@ -43,13 +44,10 @@ let temp = 0
 let TVOC = 0
 let crc = 0
 let CO2 = 0
-let paired = 0
-let interval = 600000
-paired = 0
 bluetooth.startUartService()
-power.fullPowerEvery(interval, function () {
-    I2C_Reset()
-    SGP30_Init()
+SGP30_Reset()
+SGP30_Init()
+basic.forever(function () {
     SGP30_Read()
     while (CO2 == 400) {
         bluetooth.uartWriteValue("init", CO2)
@@ -66,8 +64,10 @@ power.fullPowerEvery(interval, function () {
     bluetooth.uartWriteValue("vol", v_cap)
     bluetooth.uartWriteValue("sol", v_solar)
     bluetooth.uartWriteLine("done")
-    if (paired == 1) {
-        I2C_Reset()
-        power.lowPowerRequest()
+    t = 0
+    for (let index = 0; index < 100; index++) {
+        t += 1
+        basic.pause(3000)
+        bluetooth.uartWriteLine(convertToText(t))
     }
 })
