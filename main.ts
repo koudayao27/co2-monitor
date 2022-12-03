@@ -44,7 +44,6 @@ function measure () {
     bluetooth.uartWriteValue("humi", humi)
     bluetooth.uartWriteValue("co2", CO2)
     bluetooth.uartWriteValue("vol", v_cap)
-    bluetooth.uartWriteValue("sol", v_solar)
     bluetooth.uartWriteLine("done")
 }
 function SGP30_Read () {
@@ -57,10 +56,7 @@ function SGP30_Read () {
     false
     )
     basic.pause(10)
-    CO2 = pins.i2cReadNumber(88, NumberFormat.UInt16BE, true)
-    crc = pins.i2cReadNumber(88, NumberFormat.UInt8BE, true)
-    TVOC = pins.i2cReadNumber(88, NumberFormat.UInt16BE, true)
-    crc = pins.i2cReadNumber(88, NumberFormat.UInt8BE, false)
+    CO2 = pins.i2cReadNumber(88, NumberFormat.UInt16BE, false)
 }
 function SGP30_Reset () {
     pins.i2cWriteNumber(
@@ -78,19 +74,22 @@ let temp = 0
 let TVOC = 0
 let crc = 0
 let CO2 = 0
-power.fullPowerOn(FullPowerSource.A)
 bluetooth.startUartService()
 SGP30_Reset()
 SGP30_Init()
 SGP30_Read()
-let t = 0
-while (CO2 <= 400 || t < 20) {
+for (let index = 0; index < 15; index++) {
+    SGP30_Read()
     bluetooth.uartWriteValue("init", CO2)
     basic.pause(1000)
+}
+while (CO2 == 400) {
     SGP30_Read()
-    t += 1
+    bluetooth.uartWriteValue("init", CO2)
+    basic.pause(1000)
 }
 let interval = 300000
+power.fullPowerOn(FullPowerSource.A)
 power.lowPowerRequest()
 power.fullPowerEvery(interval, function () {
     measure()
