@@ -3,26 +3,6 @@ input.onButtonPressed(Button.A, function () {
     measure()
     power.lowPowerRequest()
 })
-input.onButtonPressed(Button.B, function () {
-    bluetooth.uartWriteLine("baseline")
-    // address: 0x58
-    // measure: 0x2015
-    pins.i2cWriteNumber(
-    88,
-    8213,
-    NumberFormat.UInt16BE,
-    false
-    )
-    basic.pause(12)
-    CO2 = pins.i2cReadNumber(88, NumberFormat.Int16BE, true)
-    bluetooth.uartWriteValue("b0", CO2)
-    crc = pins.i2cReadNumber(88, NumberFormat.Int8BE, true)
-    bluetooth.uartWriteValue("crc", crc)
-    TVOC = pins.i2cReadNumber(88, NumberFormat.Int16BE, true)
-    bluetooth.uartWriteValue("b1", TVOC)
-    crc = pins.i2cReadNumber(88, NumberFormat.Int8BE, true)
-    bluetooth.uartWriteValue("crc", crc)
-})
 function SGP30_Init () {
     // address: 0x58
     // init_cmd: 0x2003
@@ -71,8 +51,6 @@ let v_cap = 0
 let v_solar = 0
 let humi = 0
 let temp = 0
-let TVOC = 0
-let crc = 0
 let CO2 = 0
 bluetooth.startUartService()
 SGP30_Reset()
@@ -94,12 +72,12 @@ power.lowPowerRequest()
 power.fullPowerEvery(interval, function () {
     measure()
     if (v_cap < v_solar) {
-        //    300000 ms
+        // 300000 ms
         // = 300 seconds
         // = 5 minutes
         interval = 300000
     } else {
-        //    1800000 ms
+        // 1800000 ms
         // = 1800 seconds
         // = 30 minutes
         interval = 1800000
